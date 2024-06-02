@@ -23,7 +23,8 @@ if (isset($_GET['code'])) {
         if (isset($token['refresh_token'])) {
             $_SESSION['refresh_token'] = $token['refresh_token'];
         }
-
+        $_SESSION['message'] = 'Successfully Logged In';
+        $_SESSION['status'] = 'success';
         // Redirect to index page after successful token exchange
         header('Location: index.php');
         exit();

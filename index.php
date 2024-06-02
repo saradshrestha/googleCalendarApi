@@ -10,72 +10,74 @@ $client = $googleClientGlobal->getClient();
 
 $authUrl = null;
 
-if (isset($_GET['logout'])) {
-    unset($_SESSION['access_token']);
-    session_destroy();
-    header('Location: index.php');
-    exit();
-}
+try{
+    if (!isset($_SESSION['access_token'])) {
 
-if (!isset($_SESSION['access_token'])) {
+        if (isset($_GET['code'])) {
+            $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
+            $client->setAccessToken($token);
 
-    if (isset($_GET['code'])) {
-        $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
-        $client->setAccessToken($token);
+            echo $token . 'true';
+            if (array_key_exists('refresh_token', $token)) {
+                $_SESSION['refresh_token'] = $token['refresh_token'];
+            } elseif (isset($_SESSION['refresh_token'])) {
+                $client->refreshToken($_SESSION['refresh_token']);
+                $token = $client->getAccessToken();
+            }
 
-        echo $token . 'true';
-        if (array_key_exists('refresh_token', $token)) {
-            $_SESSION['refresh_token'] = $token['refresh_token'];
-        } elseif (isset($_SESSION['refresh_token'])) {
-            $client->refreshToken($_SESSION['refresh_token']);
-            $token = $client->getAccessToken();
-        }
-
-        $_SESSION['access_token'] = $token;
-            header('Location: index.php');
-        exit();
-    } else {
-        $authUrl = $client->createAuthUrl();
-    }
-} else {
-    $client->setAccessToken($_SESSION['access_token']);
-
-    // Refresh the token if it's expired
-    if ($client->isAccessTokenExpired()) {
-        if (isset($_SESSION['refresh_token'])) {
-            $client->fetchAccessTokenWithRefreshToken($_SESSION['refresh_token']);
-            $_SESSION['access_token'] = $client->getAccessToken();
-        } else {
-            // Handle the case where there is no refresh token
-            unset($_SESSION['access_token']);
-            header('Location: index.php');
+            $_SESSION['access_token'] = $token;
+                header('Location: index.php');
+               
             exit();
+        } else {
+            $authUrl = $client->createAuthUrl();
         }
+    } else {
+        $client->setAccessToken($_SESSION['access_token']);
+
+        // Refresh the token if it's expired
+        if ($client->isAccessTokenExpired()) {
+            if (isset($_SESSION['refresh_token'])) {
+                $client->fetchAccessTokenWithRefreshToken($_SESSION['refresh_token']);
+                $_SESSION['access_token'] = $client->getAccessToken();
+               
+            } else {
+                // Handle the case where there is no refresh token
+                unset($_SESSION['access_token']);
+               
+                header('Location: index.php');
+                exit();
+            }
+        }
+
+        $service = new Google_Service_Calendar($client);
+
+        // Displays event data
+        $calendarId = 'primary';
+        $optParams = array(
+            'maxResults' => 10,
+            'orderBy' => 'startTime',
+            'singleEvents' => true,
+            'timeMin' => date('c'),
+        );
+        $results = $service->events->listEvents($calendarId, $optParams);
+        $events = $results->getItems();
+        $accessTokenStatus = true;
+       
     }
-
-    $service = new Google_Service_Calendar($client);
-
-    // Displays event data
-    $calendarId = 'primary';
-    $optParams = array(
-        'maxResults' => 10,
-        'orderBy' => 'startTime',
-        'singleEvents' => true,
-        'timeMin' => date('c'),
-    );
-    $results = $service->events->listEvents($calendarId, $optParams);
-    $events = $results->getItems();
-    $accessTokenStatus = true;
+}
+catch (Exception $e) {
+    $_SESSION['message'] = $e->getMessage();
+    $_SESSION['status'] = 'error';
 }
 
 include('includes/header.php');
 
 ?>
 
-<div class="container">
-    <div class="card p-4">
-        <div class="card-head">
-            <h3>Upcoming Events</h3>
+    <div class="card">
+        <div class="card-header">
+            <h4>Upcoming Events</h4>
         </div>
         <div class="card-body">
             <?php
