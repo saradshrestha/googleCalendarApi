@@ -21,15 +21,13 @@ if (isset($_GET['logout'])) {
     exit();
 }
 
-include('includes/header.html');
-
 if (!isset($_SESSION['access_token'])) {
-    
+
     if (isset($_GET['code'])) {
         $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
         $client->setAccessToken($token);
 
-        echo $token.'true';
+        echo $token . 'true';
         if (array_key_exists('refresh_token', $token)) {
             $_SESSION['refresh_token'] = $token['refresh_token'];
         } elseif (isset($_SESSION['refresh_token'])) {
@@ -72,24 +70,44 @@ if (!isset($_SESSION['access_token'])) {
     );
     $results = $service->events->listEvents($calendarId, $optParams);
     $events = $results->getItems();
-
-    echo "<h1>Upcoming Events</h1>";
-    if (empty($events)) {
-        echo "<p>No upcoming events found.</p>";
-    } else {
-        echo "<ul>";
-        foreach ($events as $event) {
-            $start = $event->start->dateTime;
-            if (empty($start)) {
-                $start = $event->start->date;
-            }
-            echo "<li>" . htmlspecialchars($event->getSummary()) . " (" . htmlspecialchars($start) . ") 
-        }
-        echo "</ul>";
-    }
-
-  
 }
+
+include('includes/header.html');
+
+?>
+
+<div class="container">
+    <div class="card p-4">
+        <div class="card-head">
+            <h3>Upcoming Events</h3>
+        </div>
+        <div class="card-body">
+            <?php
+            if (empty($events)) {
+                echo "<p>No upcoming events found.</p>";
+            } else {
+                echo "<ol>";
+                foreach ($events as $event) {
+                    $start = $event->start->dateTime;
+                    if (empty($start)) {
+                        $start = $event->start->date;
+                    }
+                    echo "<li>" . htmlspecialchars($event->getSummary()) . " (" . htmlspecialchars($start) . ") 
+                    <a class='btn btn-danger ml-4 my-auto' style='line-height: 1; padding:2px 5px;' href='event/delete.php?eventId=" . htmlspecialchars($event->getId()) . "'>X</a></li>";
+                }
+                echo "</ol>";
+            }
+            ?>
+
+        </div>
+    </div>
+
+</div>
+
+
+
+
+<?php
 
 include('includes/footer.html');
 ?>
