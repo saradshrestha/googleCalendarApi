@@ -88,10 +88,15 @@ include('includes/header.php');
             } else {
                 echo "<ol>";
                 foreach ($events as $event) {
-                    $start = $event->start->dateTime;
+                    $start = strtotime($event->start->dateTime);
+
                     if (empty($start)) {
                         $start = $event->start->date;
                     }
+                    // $start = date_format($start,"Y-m-d H:i:s");
+
+                    $start = date("d M, Y h:i:s A", $start);
+
                     echo "<li>" . htmlspecialchars($event->getSummary()) . " (" . htmlspecialchars($start) . ") 
                     <a class='btn btn-danger ml-4 my-auto' style='line-height: 1; padding:2px 5px;' href='event/delete.php?eventId=" . htmlspecialchars($event->getId()) . "'>X</a></li>";
                 }

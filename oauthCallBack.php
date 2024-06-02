@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
-require_once 'GoogleClientGlobal.php';
+require 'GoogleClientGlobal.php';
 session_start();
 
 $googleClientGlobal = new GoogleClientGlobal();
