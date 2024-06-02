@@ -1,7 +1,7 @@
 <?php
-require __DIR__ . '../../vendor/autoload.php';
+require __DIR__ . '../../vendor/autoload.php'; // Adjusted the path
 
-require_once 'GoogleClientGlobal.php';
+require_once __DIR__ . '../../GoogleClientGlobal.php'; // Adjusted the path
 
 session_start();
 
@@ -11,15 +11,15 @@ if (!isset($_SESSION['access_token'])) {
 }
 
 $googleClientGlobal = new GoogleClientGlobal();
-
 $client = $googleClientGlobal->getClient();
+$client->setAccessToken($_SESSION['access_token']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    function formatDateTimeToISO8601($datetimeLocal, $timezone = 'America/Los_Angeles')
-    {
+    function formatDateTimeToISO8601($datetimeLocal, $timezone = 'America/Los_Angeles') {
         $date = new DateTime($datetimeLocal, new DateTimeZone($timezone));
         return $date->format(DateTime::ATOM); // DateTime::ATOM is equivalent to 'Y-m-d\TH:i:sP'
     }
+
     try {
         $service = new Google_Service_Calendar($client);
 
@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'location' => $_POST['location'],
             'description' => $_POST['description'],
             'start' => array(
-                'dateTime' => formatDateTimeToISO8601($_POST['start'], 'America/Los_Angeles'),
+                'dateTime' => formatDateTimeToISO8601($_POST['start']),
                 'timeZone' => 'America/Los_Angeles',
             ),
             'end' => array(
-                'dateTime' => formatDateTimeToISO8601($_POST['end'], 'America/Los_Angeles'),
+                'dateTime' => formatDateTimeToISO8601($_POST['end']),
                 'timeZone' => 'America/Los_Angeles',
             ),
             'recurrence' => array(
@@ -49,8 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         ));
 
         $event = $service->events->insert('primary', $event);
-        $_SESSION['message'] = 'success';
+        $_SESSION['message'] = 'Event created successfully';
         header('Location: ../index.php');
+        exit();
     } catch (Google_Service_Exception $e) {
         $errors = $e->getErrors();
         echo 'Error: ' . htmlspecialchars($errors[0]['message']);
@@ -60,7 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         error_log($e->getMessage());
     }
 }
-include('../includes/header.html');
+
+include('../includes/header.php');
 ?>
 
 <div class="container">
@@ -77,11 +79,11 @@ include('../includes/header.html');
                         <input type="text" id="location" class="form-control" name="location">
                     </div>
                     <div class="col-md-6 form-group">
-                        <label for="start">Start Time (YYYY-MM-DDTHH:MM:SS):</label>
+                        <label for="start">Start Time:</label>
                         <input class="form-control" type="datetime-local" id="start" name="start" required>
                     </div>
                     <div class="col-md-6 form-group">
-                        <label for="end">End Time (YYYY-MM-DDTHH:MM:SS):</label>
+                        <label for="end">End Time:</label>
                         <input type="datetime-local" class="form-control" id="end" name="end" required>
                     </div>
                     <div class="col-md-12 form-group">
@@ -89,11 +91,12 @@ include('../includes/header.html');
                         <textarea id="description" class="form-control" name="description"></textarea>
                     </div>
                 </div>
-                <buttom class="btn btn-primary float-right" type="submit">Create Event</buttom>
+                <button class="btn btn-primary float-right" type="submit">Create Event</button>
             </form>
         </div>
     </div>
+</div>
 
-    <?php
-        include('../includes/footer.html')
-    ?>
+<?php
+include('../includes/footer.php');
+?>
