@@ -1,6 +1,8 @@
 <?php
 require __DIR__ . '../../vendor/autoload.php';
 
+require_once 'GoogleClientGlobal.php';
+
 session_start();
 
 if (!isset($_SESSION['access_token'])) {
@@ -8,16 +10,9 @@ if (!isset($_SESSION['access_token'])) {
     exit();
 }
 
-// Load environment variables from .env file in the root directory of the project
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__) . '');
-$dotenv->load();
+$googleClientGlobal = new GoogleClientGlobal();
 
-$client = new Google_Client();
-$client->setClientId($_ENV['GOOGLE_CLIENT_ID']);
-$client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET']);
-$client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI']);
-$client->setAccessToken($_SESSION['access_token']);
-
+$client = $googleClientGlobal->getClient();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     function formatDateTimeToISO8601($datetimeLocal, $timezone = 'America/Los_Angeles')
@@ -57,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['message'] = 'success';
         header('Location: ../index.php');
     } catch (Google_Service_Exception $e) {
-        // echo $e->getMessage();
         $errors = $e->getErrors();
         echo 'Error: ' . htmlspecialchars($errors[0]['message']);
         error_log($e->getMessage());

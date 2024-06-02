@@ -1,18 +1,14 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
+require_once 'GoogleClientGlobal.php';
 
 session_start();
 
+$googleClientGlobal = new GoogleClientGlobal();
 
-// Load .env file
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
+$client = $googleClientGlobal->getClient();
 
-$client = new Google_Client();
-$client->setClientId($_ENV['GOOGLE_CLIENT_ID']);
-$client->setClientSecret($_ENV['GOOGLE_CLIENT_SECRET']);
-$client->setRedirectUri($_ENV['GOOGLE_REDIRECT_URI']);
-$client->addScope(Google_Service_Calendar::CALENDAR);
+$authUrl = null;
 
 if (isset($_GET['logout'])) {
     unset($_SESSION['access_token']);
@@ -36,11 +32,10 @@ if (!isset($_SESSION['access_token'])) {
         }
 
         $_SESSION['access_token'] = $token;
-        header('Location: index.php');
+            header('Location: index.php');
         exit();
     } else {
         $authUrl = $client->createAuthUrl();
-        echo "<a href='" . filter_var($authUrl, FILTER_SANITIZE_URL) . "'>Connect to Google Calendar</a>";
     }
 } else {
     $client->setAccessToken($_SESSION['access_token']);
@@ -70,9 +65,10 @@ if (!isset($_SESSION['access_token'])) {
     );
     $results = $service->events->listEvents($calendarId, $optParams);
     $events = $results->getItems();
+    $accessTokenStatus = true;
 }
 
-include('includes/header.html');
+include('includes/header.php');
 
 ?>
 
@@ -83,7 +79,9 @@ include('includes/header.html');
         </div>
         <div class="card-body">
             <?php
-            if (empty($events)) {
+            if($authUrl != null){
+                echo "<a class='btn btn-primary' href='" . filter_var($authUrl, FILTER_SANITIZE_URL) . "'>Connect to Google Calendar</a>";
+            }elseif (empty($events)) {
                 echo "<p>No upcoming events found.</p>";
             } else {
                 echo "<ol>";
@@ -98,16 +96,10 @@ include('includes/header.html');
                 echo "</ol>";
             }
             ?>
-
         </div>
     </div>
-
 </div>
-
-
-
-
 <?php
 
-include('includes/footer.html');
+include('includes/footer.php');
 ?>

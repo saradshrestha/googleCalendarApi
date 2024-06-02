@@ -18,12 +18,21 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/index.php">Home</a>
                 </li>
-                <li class="nav-item">
+                <?php
+                if(isset($_SESSION['access_token'])){
+                    echo '<li class="nav-item">
+                            <a class="nav-link" href="/event/create.php">Create Event</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php?logout=true">Logout</a>
+                        </li>';
+                }
+
+                ?>
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="/event/create.php">Create Event</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="index.php?logout=true">Logout</a>
-                </li>
+                </li> -->
+                
             </ul>
         </div>
     </nav>
